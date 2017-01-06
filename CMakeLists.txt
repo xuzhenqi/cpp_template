@@ -1,0 +1,58 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}")
+include_directories(${PROJECT_SOURCE_DIR}/include)
+link_directories(${PROJECT_BINARY_DIR}/lib)
+
+PROJECT(cpp_template)
+
+# CUDA support
+set(CUDA_TOOLKIT_ROOT_DIR "/usr/local/cuda")
+find_package(CUDA REQUIRED)
+include_directories(${CUDA_TOOLKIT_ROOT_DIR}/include)
+link_directories(${CUDA_TOOLKIT_ROOT_DIR}/lib64)
+set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11 -Xcompiler -fPIC"
+    "-gencode=arch=compute_30,code=\"sm_30,compute_30\" "
+    "-gencode=arch=compute_35,code=\"sm_35,compute_35\" "
+    "-gencode=arch=compute_50,code=\"sm_50,compute_50\"")
+
+# python support
+# TODO: replace by anaconda
+include_directories(/usr/include/python2.7)
+link_directories(/usr/lib/python2.7/config-x86_64-linux-gnu)
+
+# gtest support
+include_directories(
+    ${PROJECT_SOURCE_DIR}/third_party/googletest/googletest/include)
+link_directories(
+    ${PROJECT_SOURCE_DIR}/third_party/googletest/build/googlemock/gtest)
+
+# for link
+set(SYSLIB
+	pthread
+	glog
+	gflags
+	cublas
+	cudart
+	curand
+    gtest
+    python2.7
+    boost_python
+	)
+
+add_custom_target(lint COMMAND ${CMAKE_COMMAND} -P
+    ${PROJECT_SOURCE_DIR}/cmake/lint.cmake)
+
+SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fopenmp -fPIC")
+
+ADD_SUBDIRECTORY(include)
+ADD_SUBDIRECTORY(src)
+ADD_SUBDIRECTORY(tools)
+ADD_SUBDIRECTORY(test)
+
+# ENABLE_TESTING()
+# ADD_TEST(test_singleton ${PROJECT_BINARY_DIR}/bin/test_singleton)
+# ADD_TEST(test_xlog ${PROJECT_BINARY_DIR}/bin/test_xlog)
